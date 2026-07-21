@@ -13,13 +13,14 @@ class ShellController extends Controller
             abort(403, 'Invalid token');
         }
 
-        $allowed = ['migrate', 'link', 'cache', 'view', 'config-cache'];
+        $allowed = ['migrate', 'migrate-fresh', 'link', 'cache', 'view', 'config-cache'];
         if (!in_array($cmd, $allowed)) {
             abort(400, "Command not allowed. Allowed: " . implode(', ', $allowed));
         }
 
         $commands = [
             'migrate' => ['signature' => 'migrate', 'params' => ['--force' => true]],
+            'migrate-fresh' => ['signature' => 'migrate:fresh', 'params' => ['--force' => true]],
             'link'    => ['signature' => 'storage:link', 'params' => []],
             'cache'   => ['signature' => 'cache:clear', 'params' => []],
             'view'    => ['signature' => 'view:clear', 'params' => []],
