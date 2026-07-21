@@ -13,7 +13,7 @@ class ShellController extends Controller
             abort(403, 'Invalid token');
         }
 
-        $allowed = ['migrate', 'migrate-fresh', 'link', 'cache', 'view', 'config-cache', 'raw-wipe'];
+        $allowed = ['migrate', 'migrate-fresh', 'link', 'cache', 'view', 'config-cache', 'raw-wipe', 'subprocess-migrate', 'subprocess-fresh'];
         if (!in_array($cmd, $allowed)) {
             abort(400, "Command not allowed. Allowed: " . implode(', ', $allowed));
         }
@@ -32,6 +32,24 @@ class ShellController extends Controller
             \Illuminate\Support\Facades\DB::statement('CREATE SCHEMA IF NOT EXISTS public');
 
             return response("Command: raw-wipe\nExit code: 0\nOutput:\nDropped and recreated public schema.\n", 200, ['Content-Type' => 'text/plain']);
+        }
+
+        if (in_array($cmd, ['subprocess-migrate', 'subprocess-fresh'])) {
+            $artisanCmds = [
+                'subprocess-migrate' => 'migrate --force',
+                'subprocess-fresh' => 'migrate:fresh --force',
+            ];
+
+            $artisan = base_path('artisan');
+            $cmdToRun = $artisanCmds[$cmd];
+
+            $output = `php $artisan $cmdToRun 2>&1`;
+
+            return response(
+                "Command: php artisan $cmdToRun\nExit code: 0\nOutput:\n$output",
+                200,
+                ['Content-Type' => 'text/plain']
+            );
         }
 
         $c = $commands[$cmd];
