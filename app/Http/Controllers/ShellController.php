@@ -13,7 +13,7 @@ class ShellController extends Controller
             abort(403, 'Invalid token');
         }
 
-        $allowed = ['migrate', 'migrate-fresh', 'link', 'cache', 'view', 'config-cache', 'raw-wipe', 'subprocess-migrate', 'subprocess-fresh'];
+        $allowed = ['migrate', 'migrate-fresh', 'link', 'cache', 'view', 'config-cache', 'raw-wipe', 'subprocess-migrate', 'subprocess-fresh', 'subprocess-seed'];
         if (!in_array($cmd, $allowed)) {
             abort(400, "Command not allowed. Allowed: " . implode(', ', $allowed));
         }
@@ -34,10 +34,11 @@ class ShellController extends Controller
             return response("Command: raw-wipe\nExit code: 0\nOutput:\nDropped and recreated public schema.\n", 200, ['Content-Type' => 'text/plain']);
         }
 
-        if (in_array($cmd, ['subprocess-migrate', 'subprocess-fresh'])) {
+        if (in_array($cmd, ['subprocess-migrate', 'subprocess-fresh', 'subprocess-seed'])) {
             $artisanCmds = [
                 'subprocess-migrate' => 'migrate --force',
-                'subprocess-fresh' => 'migrate:fresh --force',
+                'subprocess-fresh' => 'migrate:fresh --force --seed',
+                'subprocess-seed' => 'db:seed --force',
             ];
 
             $artisan = base_path('artisan');
