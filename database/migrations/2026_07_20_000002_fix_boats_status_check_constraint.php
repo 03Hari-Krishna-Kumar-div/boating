@@ -43,16 +43,7 @@ return new class extends Migration
             $table->id();
             $table->integer('boat_number')->unique();
             $table->string('name')->nullable();
-            $table->enum('status', [
-                'available',
-                'occupied',
-                'warning',
-                'awaiting_confirmation',
-                'overdue',
-                'maintenance',
-                'ended',
-                'time_up',
-            ])->default('available')->index();
+            $table->string('status', 30)->default('available')->index();
             $table->unsignedBigInteger('current_rental_id')->nullable();
             $table->string('color_hex', 7)->nullable();
             $table->text('notes')->nullable();
@@ -95,14 +86,7 @@ return new class extends Migration
             $table->id();
             $table->integer('boat_number')->unique();
             $table->string('name')->nullable();
-            $table->enum('status', [
-                'available',
-                'occupied',
-                'warning',
-                'awaiting_confirmation',
-                'overdue',
-                'maintenance',
-            ])->default('available')->index();
+            $table->string('status', 30)->default('available')->index();
             $table->unsignedBigInteger('current_rental_id')->nullable();
             $table->string('color_hex', 7)->nullable();
             $table->text('notes')->nullable();

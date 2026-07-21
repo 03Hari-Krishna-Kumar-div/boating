@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -17,7 +18,7 @@ return new class extends Migration
             $table->timestamp('ended_at')->nullable();
             $table->timestamp('actual_end_at')->nullable();
             $table->integer('overtime_seconds')->default(0);
-            $table->enum('status', ['active', 'completed', 'overdue', 'overridden'])->default('active')->index();
+            $table->string('status', 30)->default('active')->index();
             $table->unsignedBigInteger('ended_by')->nullable();
             $table->boolean('customer_returned')->nullable();
             $table->text('notes')->nullable();
@@ -28,10 +29,9 @@ return new class extends Migration
 
         Schema::create('boats', function (Blueprint $table) {
             $table->id();
-            $table->integer('boat_number')->unique();
+            $table->integer('boat_number');
             $table->string('name')->nullable();
-            $table->enum('status', ['available', 'occupied', 'warning', 'awaiting_confirmation', 'overdue', 'maintenance'])
-                ->default('available')->index();
+            $table->string('status', 30)->default('available')->index();
             $table->unsignedBigInteger('current_rental_id')->nullable();
             $table->string('color_hex', 7)->nullable();
             $table->text('notes')->nullable();
@@ -39,6 +39,8 @@ return new class extends Migration
 
             $table->foreign('current_rental_id')->references('id')->on('rentals')->onDelete('set null');
         });
+
+        DB::statement('CREATE UNIQUE INDEX boats_boat_number_unique ON boats (boat_number)');
 
         Schema::table('rentals', function (Blueprint $table) {
             $table->foreign('boat_id')->references('id')->on('boats')->onDelete('cascade');

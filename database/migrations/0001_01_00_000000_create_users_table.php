@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email');
             $table->string('password');
-            $table->enum('role', ['admin', 'worker'])->default('worker')->index();
+            $table->string('role', 20)->default('worker')->index();
             $table->boolean('is_active')->default(true);
             $table->timestamp('last_activity_at')->nullable();
             $table->rememberToken();
