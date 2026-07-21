@@ -13,7 +13,7 @@ class ShellController extends Controller
             abort(403, 'Invalid token');
         }
 
-        $allowed = ['migrate', 'migrate-fresh', 'link', 'cache', 'view', 'config-cache'];
+        $allowed = ['migrate', 'migrate-fresh', 'link', 'cache', 'view', 'config-cache', 'raw-wipe'];
         if (!in_array($cmd, $allowed)) {
             abort(400, "Command not allowed. Allowed: " . implode(', ', $allowed));
         }
@@ -26,6 +26,13 @@ class ShellController extends Controller
             'view'    => ['signature' => 'view:clear', 'params' => []],
             'config-cache' => ['signature' => 'config:cache', 'params' => []],
         ];
+
+        if ($cmd === 'raw-wipe') {
+            \Illuminate\Support\Facades\DB::statement('DROP SCHEMA IF EXISTS public CASCADE');
+            \Illuminate\Support\Facades\DB::statement('CREATE SCHEMA IF NOT EXISTS public');
+
+            return response("Command: raw-wipe\nExit code: 0\nOutput:\nDropped and recreated public schema.\n", 200, ['Content-Type' => 'text/plain']);
+        }
 
         $c = $commands[$cmd];
 
