@@ -28,7 +28,7 @@ return new class extends Migration
 
         Schema::create('boats', function (Blueprint $table) {
             $table->id();
-            $table->integer('boat_number')->unique()->index();
+            $table->integer('boat_number')->unique();
             $table->string('name')->nullable();
             $table->enum('status', ['available', 'occupied', 'warning', 'awaiting_confirmation', 'overdue', 'maintenance'])
                 ->default('available')->index();

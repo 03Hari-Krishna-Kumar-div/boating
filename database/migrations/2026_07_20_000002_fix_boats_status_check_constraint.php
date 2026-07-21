@@ -41,7 +41,7 @@ return new class extends Migration
         // 1. Create the new table with the updated CHECK constraint
         Schema::create('boats_new', function (Blueprint $table) {
             $table->id();
-            $table->integer('boat_number')->unique()->index();
+            $table->integer('boat_number')->unique();
             $table->string('name')->nullable();
             $table->enum('status', [
                 'available',
@@ -93,7 +93,7 @@ return new class extends Migration
 
         Schema::create('boats_old', function (Blueprint $table) {
             $table->id();
-            $table->integer('boat_number')->unique()->index();
+            $table->integer('boat_number')->unique();
             $table->string('name')->nullable();
             $table->enum('status', [
                 'available',

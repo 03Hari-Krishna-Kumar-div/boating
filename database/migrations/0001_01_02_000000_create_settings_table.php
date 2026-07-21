@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('key', 100)->unique()->index();
+            $table->string('key', 100)->unique();
             $table->text('value');
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
