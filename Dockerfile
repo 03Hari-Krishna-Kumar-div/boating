@@ -32,7 +32,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 RUN npm ci && npm run build
 
-RUN chmod -R 775 storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
