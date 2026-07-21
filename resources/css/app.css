@@ -1,0 +1,48 @@
+/* BRMS Claymorphism Theme - Main Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --clay-bg: #f0ebe3;
+    --clay-card: #f5f0e8;
+    --clay-shadow: 8px 8px 16px #d9d4cc, -8px -8px 16px #ffffff;
+    --clay-shadow-sm: 4px 4px 8px #d9d4cc, -4px -4px 8px #ffffff;
+    --clay-shadow-lg: 12px 12px 24px #d9d4cc, -12px -12px 24px #ffffff;
+    --clay-inset: inset 3px 3px 6px #d9d4cc, inset -3px -3px 6px #ffffff;
+    --clay-inset-sm: inset 2px 2px 4px #d9d4cc, inset -2px -2px 4px #ffffff;
+    --clay-radius: 20px;
+    --clay-radius-sm: 12px;
+    --clay-radius-lg: 28px;
+    --clay-primary: #6c5ce7;
+    --clay-success: #00b894;
+    --clay-warning: #fdcb6e;
+    --clay-danger: #e17055;
+    --clay-info: #74b9ff;
+    --clay-dark: #2d3436;
+    --clay-text: #2d3436;
+    --clay-text-light: #636e72;
+    --transition-base: all 0.3s ease;
+}
+
+[data-bs-theme="dark"] {
+    --clay-bg: #1a1a2e;
+    --clay-card: #16213e;
+    --clay-shadow: 8px 8px 16px #0f0f1a, -8px -8px 16px #1d1d3a;
+    --clay-shadow-sm: 4px 4px 8px #0f0f1a, -4px -4px 8px #1d1d3a;
+    --clay-shadow-lg: 12px 12px 24px #0f0f1a, -12px -12px 24px #1d1d3a;
+    --clay-inset: inset 3px 3px 6px #0f0f1a, inset -3px -3px 6px #1d1d3a;
+    --clay-inset-sm: inset 2px 2px 4px #0f0f1a, inset -2px -2px 4px #1d1d3a;
+    --clay-text: #dfe6e9;
+    --clay-text-light: #b2bec3;
+}
+
+* { font-family: 'Inter', sans-serif; }
+
+body {
+    background: var(--clay-bg);
+    color: var(--clay-text);
+    min-height: 100vh;
+}
+
+/* Add CSS variables to Bootstrap */
+.bg-clay { background: var(--clay-bg) !important; }
+.text-clay { color: var(--clay-text) !important; }
