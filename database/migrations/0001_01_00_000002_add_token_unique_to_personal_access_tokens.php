@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    public $withinTransaction = false;
     public function up(): void
     {
         DB::statement('CREATE UNIQUE INDEX personal_access_tokens_token_unique ON personal_access_tokens (token)');

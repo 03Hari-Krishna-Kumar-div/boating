@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
+    public $withinTransaction = false;
     /**
      * Run the migrations.
      * Adds 'awaiting_confirmation' to the rentals.status ENUM.
