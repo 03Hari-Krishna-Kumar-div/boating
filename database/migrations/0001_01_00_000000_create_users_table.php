@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    protected $withinTransaction = false;
+
     public function up(): void
     {
         DB::statement("
