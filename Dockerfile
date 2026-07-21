@@ -10,7 +10,8 @@ RUN apk add --no-cache \
     npm \
     libpng-dev \
     libzip-dev \
-    oniguruma-dev
+    oniguruma-dev \
+    libpq-dev
 
 RUN docker-php-ext-install \
     pdo \
