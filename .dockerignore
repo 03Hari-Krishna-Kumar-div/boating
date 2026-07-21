@@ -1,0 +1,17 @@
+.env
+.env.bak
+.git
+.gitignore
+.gitattributes
+vendor/
+node_modules/
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/logs/*.log
+storage/app/backups/*
+con.txt
+deploy-auto.cjs
+*.md
+.phpunit.result.cache
+worker-cookies.txt
+screenshots/
