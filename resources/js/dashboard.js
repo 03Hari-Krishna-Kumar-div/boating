@@ -290,6 +290,34 @@ function updateBoatCard(cardElement, boat) {
         }
     }
 
+    // ── Admin Time Controls (Extend / Reduce) ──
+    const timeControls = cardElement.querySelector('.admin-time-controls');
+    const isAdmin = cardElement.dataset.isAdmin === '1';
+    if (timeControls) {
+        const showTimeControls = isAdmin && ['occupied', 'warning', 'time_up'].includes(boat.status);
+        timeControls.style.display = showTimeControls ? '' : 'none';
+
+        // Update rental ID on all extend/reduce buttons (they were rendered with stale IDs)
+        if (showTimeControls && rental) {
+            const presetBtns = timeControls.querySelectorAll('[onclick^="extendRental"], [onclick^="reduceRental"]');
+            presetBtns.forEach(btn => {
+                const match = btn.getAttribute('onclick')?.match(/^(extendRental|reduceRental)\(\d+,\s*(\d+)/);
+                if (match) {
+                    btn.setAttribute('onclick', `${match[1]}(${rental.id}, ${match[2]}`);
+                }
+            });
+            // Also update the modal openers
+            const extendModalBtn = timeControls.querySelector('[onclick^="openExtendModal"]');
+            if (extendModalBtn) {
+                extendModalBtn.setAttribute('onclick', `openExtendModal(${rental.id}, ${boat.boat_number})`);
+            }
+            const reduceModalBtn = timeControls.querySelector('[onclick^="openReduceModal"]');
+            if (reduceModalBtn) {
+                reduceModalBtn.setAttribute('onclick', `openReduceModal(${rental.id}, ${boat.boat_number})`);
+            }
+        }
+    }
+
     // ── Action buttons visibility ──
     const endBtn = cardElement.querySelector('[data-boat-action="end-rental"]');
     if (endBtn) {
@@ -298,6 +326,23 @@ function updateBoatCard(cardElement, boat) {
     const receiveBtn = cardElement.querySelector('[data-boat-action="mark-received"]');
     if (receiveBtn) {
         receiveBtn.style.display = boat.status === 'ended' ? '' : 'none';
+    }
+    // Force End button — visible only for admin AND when there's a current rental
+    const forceEndBtn = cardElement.querySelector('.admin-force-end-btn');
+    if (forceEndBtn) {
+        forceEndBtn.style.display = (isAdmin && rental) ? '' : 'none';
+        if (rental) {
+            forceEndBtn.setAttribute('onclick', `forceEndRental(${rental.id}, ${boat.boat_number})`);
+        }
+    }
+    // Transfer button — visible only for admin AND rental in active/ended states
+    const transferBtn = cardElement.querySelector('.admin-transfer-btn');
+    if (transferBtn) {
+        const showTransfer = isAdmin && rental && ['occupied', 'warning', 'time_up', 'ended'].includes(boat.status);
+        transferBtn.style.display = showTransfer ? '' : 'none';
+        if (showTransfer) {
+            transferBtn.setAttribute('onclick', `openTransferModal(${rental.id}, ${boat.boat_number})`);
+        }
     }
 
     // ── Available section action buttons ──

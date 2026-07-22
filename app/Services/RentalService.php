@@ -10,7 +10,6 @@ use App\Enums\RentalStatus;
 use App\Exceptions\BoatNotAvailableException;
 use App\Services\ActivityLogService;
 use App\Services\NotificationService;
-use Illuminate\Support\Facades\Log;
 
 class RentalService
 {
@@ -34,14 +33,6 @@ class RentalService
 
         $expectedEnd = $this->timerService->calculateExpectedEnd(now(), $durationMinutes);
 
-        // Step 1: Create rental (no explicit transaction — PgBouncer pooler
-        // struggles with multi-statement transactions. Each query auto-commits.)
-        Log::info('Attempting Rental::create', [
-            'boat_id' => $boat->id,
-            'worker_id' => $worker->id,
-            'expected_end_at' => $expectedEnd->toDateTimeString(),
-        ]);
-
         $rental = Rental::create([
             'boat_id' => $boat->id,
             'worker_id' => $worker->id,
@@ -50,20 +41,10 @@ class RentalService
             'status' => RentalStatus::ACTIVE,
         ]);
 
-        Log::info('Rental created OK, id=' . $rental->id);
-
-        // Step 2: Update boat
-        Log::info('Attempting Boat::update', [
-            'boat_id' => $boat->id,
-            'rental_id' => $rental->id,
-        ]);
-
         $boat->update([
             'status' => BoatStatus::OCCUPIED,
             'current_rental_id' => $rental->id,
         ]);
-
-        Log::info('Boat updated OK');
 
         // $this->activityLogService->log('boat_started', $worker, $boat, $rental,
         //     "Rental started on boat {$boat->boat_number} by {$worker->name}");

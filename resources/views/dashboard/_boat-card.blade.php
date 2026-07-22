@@ -16,7 +16,8 @@
      data-status="{{ $status }}"
      data-boat-number="{{ $boat->boat_number }}"
      data-boat-id="{{ $boat->id }}"
-     data-worker-id="{{ $currentRental?->worker_id ?? '' }}">
+     data-worker-id="{{ $currentRental?->worker_id ?? '' }}"
+     data-is-admin="{{ $isAdmin ? '1' : '0' }}">
     <div class="clay-card p-3 boat-card h-100 position-relative
         @if($status === 'warning') boat-card-warning
         @elseif($status === 'time_up') boat-card-time-up
@@ -98,31 +99,30 @@
             @if($canAct)
             <hr class="my-2" style="opacity:0.15;">
 
-            <!-- ADMIN: Time Controls (Extend / Reduce) -->
-            @if($isAdmin && in_array($status, ['occupied', 'warning', 'time_up']))
-                <div class="d-flex gap-1 mb-1 justify-content-center flex-wrap">
-                    <div class="btn-group btn-group-sm" role="group">
-                        @foreach([5, 10, 15, 30] as $preset)
-                            <button class="clay-btn clay-btn-info btn-sm" style="padding:2px 6px;font-size:0.65rem;min-width:32px;" onclick="extendRental({{ $currentRental?->id ?? 'null' }}, {{ $preset }})" title="+{{ $preset }} min">
-                                +{{ $preset }}
-                            </button>
-                        @endforeach
-                        <button class="clay-btn clay-btn-info btn-sm" style="padding:2px 8px;font-size:0.65rem;" onclick="openExtendModal({{ $currentRental?->id ?? 'null' }}, {{ $boat->boat_number }})" title="Custom extend">
-                            <i class="bi bi-plus-circle"></i>
+            <!-- ADMIN: Time Controls (Extend / Reduce) — always rendered, toggled by JS -->
+            <div class="d-flex gap-1 mb-1 justify-content-center flex-wrap admin-time-controls"
+                 style="display:{{ $isAdmin && in_array($status, ['occupied', 'warning', 'time_up']) ? '' : 'none' }};">
+                <div class="btn-group btn-group-sm" role="group">
+                    @foreach([5, 10, 15, 30] as $preset)
+                        <button class="clay-btn clay-btn-info btn-sm" style="padding:2px 6px;font-size:0.65rem;min-width:32px;" onclick="extendRental({{ $currentRental?->id ?? 'null' }}, {{ $preset }})" title="+{{ $preset }} min">
+                            +{{ $preset }}
                         </button>
-                    </div>
-                    <div class="btn-group btn-group-sm" role="group">
-                        @foreach([5, 10] as $preset)
-                            <button class="clay-btn clay-btn-warning btn-sm" style="padding:2px 6px;font-size:0.65rem;min-width:32px;" onclick="reduceRental({{ $currentRental?->id ?? 'null' }}, {{ $preset }}, {{ $boat->boat_number }})" title="-{{ $preset }} min">
-                                -{{ $preset }}
-                            </button>
-                        @endforeach
-                        <button class="clay-btn clay-btn-warning btn-sm" style="padding:2px 8px;font-size:0.65rem;" onclick="openReduceModal({{ $currentRental?->id ?? 'null' }}, {{ $boat->boat_number }})" title="Custom reduce">
-                            <i class="bi bi-dash-circle"></i>
-                        </button>
-                    </div>
+                    @endforeach
+                    <button class="clay-btn clay-btn-info btn-sm" style="padding:2px 8px;font-size:0.65rem;" onclick="openExtendModal({{ $currentRental?->id ?? 'null' }}, {{ $boat->boat_number }})" title="Custom extend">
+                        <i class="bi bi-plus-circle"></i>
+                    </button>
                 </div>
-            @endif
+                <div class="btn-group btn-group-sm" role="group">
+                    @foreach([5, 10] as $preset)
+                        <button class="clay-btn clay-btn-warning btn-sm" style="padding:2px 6px;font-size:0.65rem;min-width:32px;" onclick="reduceRental({{ $currentRental?->id ?? 'null' }}, {{ $preset }}, {{ $boat->boat_number }})" title="-{{ $preset }} min">
+                            -{{ $preset }}
+                        </button>
+                    @endforeach
+                    <button class="clay-btn clay-btn-warning btn-sm" style="padding:2px 8px;font-size:0.65rem;" onclick="openReduceModal({{ $currentRental?->id ?? 'null' }}, {{ $boat->boat_number }})" title="Custom reduce">
+                        <i class="bi bi-dash-circle"></i>
+                    </button>
+                </div>
+            </div>
 
             <!-- END / RECEIVE / FORCE END buttons -->
             <div class="d-flex gap-1 justify-content-center flex-wrap">
@@ -144,17 +144,19 @@
                 </button>
                 @endif
 
-                <!-- ADMIN: Force End / Complete / Transfer -->
-                @if($isAdmin)
-                    <button class="clay-btn clay-btn-dark btn-sm" style="padding:2px 8px;font-size:0.65rem;{{ $currentRental ? '' : 'display:none;' }}" onclick="forceEndRental({{ $currentRental?->id ?? 'null' }}, {{ $boat->boat_number }})">
-                        <i class="bi bi-shield-exclamation"></i> Force End
-                    </button>
-                    @if(in_array($status, ['occupied', 'warning', 'time_up', 'ended']))
-                    <button class="clay-btn clay-btn-info btn-sm" style="padding:2px 8px;font-size:0.65rem;" onclick="openTransferModal({{ $currentRental?->id ?? 'null' }}, {{ $boat->boat_number }})">
-                        <i class="bi bi-arrow-left-right"></i> Transfer
-                    </button>
-                    @endif
-                @endif
+                <!-- ADMIN: Force End / Complete / Transfer (always rendered, toggled by JS) -->
+                <button class="clay-btn clay-btn-dark btn-sm admin-force-end-btn"
+                        style="padding:2px 8px;font-size:0.65rem;{{ $currentRental ? '' : 'display:none;' }}"
+                        onclick="forceEndRental({{ $currentRental?->id ?? 'null' }}, {{ $boat->boat_number }})"
+                        data-is-admin="{{ $isAdmin ? '1' : '0' }}">
+                    <i class="bi bi-shield-exclamation"></i> Force End
+                </button>
+                <button class="clay-btn clay-btn-info btn-sm admin-transfer-btn"
+                        style="padding:2px 8px;font-size:0.65rem;display:{{ $isAdmin && in_array($status, ['occupied', 'warning', 'time_up', 'ended']) ? '' : 'none' }};"
+                        onclick="openTransferModal({{ $currentRental?->id ?? 'null' }}, {{ $boat->boat_number }})"
+                        data-is-admin="{{ $isAdmin ? '1' : '0' }}">
+                    <i class="bi bi-arrow-left-right"></i> Transfer
+                </button>
             </div>
             @endif
 
