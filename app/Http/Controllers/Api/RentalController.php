@@ -67,7 +67,7 @@ class RentalController extends Controller
             Log::error('Rental end error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to end rental. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -103,7 +103,7 @@ class RentalController extends Controller
             Log::error('Mark received error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to mark as received. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -137,7 +137,7 @@ class RentalController extends Controller
             Log::error('Transfer error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to transfer ownership.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -171,7 +171,7 @@ class RentalController extends Controller
             Log::error('Rental confirm error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to process confirmation. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -197,7 +197,7 @@ class RentalController extends Controller
             Log::error('Mark still out error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to update status. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -224,7 +224,7 @@ class RentalController extends Controller
             Log::error('My rentals error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to load rentals.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -257,7 +257,7 @@ class RentalController extends Controller
             Log::error('Extend time error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to extend time. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -294,7 +294,7 @@ class RentalController extends Controller
             Log::error('Reduce time error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to reduce time. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -323,7 +323,7 @@ class RentalController extends Controller
             Log::error('Force-end error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to force-end rental. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -344,7 +344,7 @@ class RentalController extends Controller
             Log::error('Active rentals error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to load rentals.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -373,7 +373,7 @@ class RentalController extends Controller
             Log::error('Complete rental error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to complete rental. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

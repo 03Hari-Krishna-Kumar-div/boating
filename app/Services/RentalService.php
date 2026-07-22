@@ -10,7 +10,6 @@ use App\Enums\RentalStatus;
 use App\Exceptions\BoatNotAvailableException;
 use App\Services\ActivityLogService;
 use App\Services\NotificationService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RentalService
@@ -76,37 +75,35 @@ class RentalService
 
     public function endRental(Rental $rental, User $endedBy, ?string $notes = null): Rental
     {
-        return DB::transaction(function () use ($rental, $endedBy, $notes) {
-            $boat = $rental->boat;
+        $boat = $rental->boat;
 
-            $overtimeSeconds = $this->timerService->getOvertimeSeconds(
-                $rental->started_at, $rental->effective_end_at
-            );
+        $overtimeSeconds = $this->timerService->getOvertimeSeconds(
+            $rental->started_at, $rental->effective_end_at
+        );
 
-            $rental->update([
-                'ended_at' => now(),
-                'actual_end_at' => now(),
-                'ended_by' => $endedBy->id,
-                'overtime_seconds' => $overtimeSeconds,
-                'status' => RentalStatus::ENDED,
-                'customer_returned' => false,
-                'notes' => $notes,
-                'end_reason' => $endedBy->isAdmin() ? 'admin_ended' : 'worker_ended',
-            ]);
+        $rental->update([
+            'ended_at' => now(),
+            'actual_end_at' => now(),
+            'ended_by' => $endedBy->id,
+            'overtime_seconds' => $overtimeSeconds,
+            'status' => RentalStatus::ENDED,
+            'customer_returned' => false,
+            'notes' => $notes,
+            'end_reason' => $endedBy->isAdmin() ? 'admin_ended' : 'worker_ended',
+        ]);
 
-            // Boat goes to ENDED state — NOT available yet.
-            // Worker must physically receive the boat first.
-            $boat->update([
-                'status' => BoatStatus::ENDED,
-                // Keep current_rental_id until received
-            ]);
+        // Boat goes to ENDED state — NOT available yet.
+        // Worker must physically receive the boat first.
+        $boat->update([
+            'status' => BoatStatus::ENDED,
+            // Keep current_rental_id until received
+        ]);
 
-            // $this->activityLogService->log('rental_ended', $endedBy, $boat, $rental, "...");
-            // $this->notificationService->send($endedBy, 'rental_ended', "...");
-            // $this->notificationService->sendToAllAdmins('rental_ended', "...");
+        // $this->activityLogService->log('rental_ended', $endedBy, $boat, $rental, "...");
+        // $this->notificationService->send($endedBy, 'rental_ended', "...");
+        // $this->notificationService->sendToAllAdmins('rental_ended', "...");
 
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     /**
@@ -115,31 +112,29 @@ class RentalService
      */
     public function markReceived(Rental $rental, User $user): Rental
     {
-        return DB::transaction(function () use ($rental, $user) {
-            $boat = $rental->boat;
+        $boat = $rental->boat;
 
-            if ($rental->status !== RentalStatus::ENDED) {
-                throw new \RuntimeException('Rental must be in ENDED status to receive boat.');
-            }
+        if ($rental->status !== RentalStatus::ENDED) {
+            throw new \RuntimeException('Rental must be in ENDED status to receive boat.');
+        }
 
-            $rental->update([
-                'received_at' => now(),
-                'received_by_worker_id' => $user->id,
-                'status' => RentalStatus::COMPLETED,
-                'customer_returned' => true,
-            ]);
+        $rental->update([
+            'received_at' => now(),
+            'received_by_worker_id' => $user->id,
+            'status' => RentalStatus::COMPLETED,
+            'customer_returned' => true,
+        ]);
 
-            $boat->update([
-                'status' => BoatStatus::AVAILABLE,
-                'current_rental_id' => null,
-            ]);
+        $boat->update([
+            'status' => BoatStatus::AVAILABLE,
+            'current_rental_id' => null,
+        ]);
 
-            // $this->activityLogService->log('boat_received', $user, $boat, $rental, "...");
-            // $this->notificationService->send($rental->worker, 'boat_received', "...");
-            // $this->notificationService->sendToAllAdmins('boat_received', "...");
+        // $this->activityLogService->log('boat_received', $user, $boat, $rental, "...");
+        // $this->notificationService->send($rental->worker, 'boat_received', "...");
+        // $this->notificationService->sendToAllAdmins('boat_received', "...");
 
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     /**
@@ -147,22 +142,20 @@ class RentalService
      */
     public function transferOwnership(Rental $rental, User $newWorker, User $admin): Rental
     {
-        return DB::transaction(function () use ($rental, $newWorker, $admin) {
-            $boat = $rental->boat;
+        $boat = $rental->boat;
 
-            $oldWorkerId = $rental->worker_id;
+        $oldWorkerId = $rental->worker_id;
 
-            $rental->update([
-                'worker_id' => $newWorker->id,
-            ]);
+        $rental->update([
+            'worker_id' => $newWorker->id,
+        ]);
 
-            // $this->activityLogService->log('ownership_transferred', $admin, $boat, $rental, "...");
-            // $this->notificationService->send($newWorker, 'ownership_transferred', "...");
-            // $this->notificationService->send(User::find($oldWorkerId), 'ownership_transferred', "...");
-            // $this->notificationService->sendToAllAdmins('ownership_transferred', "...");
+        // $this->activityLogService->log('ownership_transferred', $admin, $boat, $rental, "...");
+        // $this->notificationService->send($newWorker, 'ownership_transferred', "...");
+        // $this->notificationService->send(User::find($oldWorkerId), 'ownership_transferred', "...");
+        // $this->notificationService->sendToAllAdmins('ownership_transferred', "...");
 
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     /**
@@ -170,113 +163,105 @@ class RentalService
      */
     public function markTimeUp(Rental $rental): Rental
     {
-        return DB::transaction(function () use ($rental) {
-            $boat = $rental->boat;
+        $boat = $rental->boat;
 
-            $rental->update([
-                'status' => RentalStatus::OVERDUE,
-            ]);
+        $rental->update([
+            'status' => RentalStatus::OVERDUE,
+        ]);
 
-            $boat->update([
-                'status' => BoatStatus::TIME_UP,
-            ]);
+        $boat->update([
+            'status' => BoatStatus::TIME_UP,
+        ]);
 
-            // $this->activityLogService->log('time_up', null, $boat, $rental, "...");
-            // $this->notificationService->send($rental->worker, 'time_up', "...");
-            // $this->notificationService->sendToAllAdmins('time_up', "...");
+        // $this->activityLogService->log('time_up', null, $boat, $rental, "...");
+        // $this->notificationService->send($rental->worker, 'time_up', "...");
+        // $this->notificationService->sendToAllAdmins('time_up', "...");
 
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     public function confirmReturn(Rental $rental, User $worker): Rental
     {
-        return DB::transaction(function () use ($rental, $worker) {
-            $boat = $rental->boat;
+        $boat = $rental->boat;
 
-            $overtimeSeconds = $this->timerService->getOvertimeSeconds(
-                $rental->started_at, $rental->effective_end_at
-            );
+        $overtimeSeconds = $this->timerService->getOvertimeSeconds(
+            $rental->started_at, $rental->effective_end_at
+        );
 
-            $rental->update([
-                'ended_at' => now(),
-                'actual_end_at' => now(),
-                'ended_by' => $worker->id,
-                'overtime_seconds' => $overtimeSeconds,
-                'status' => RentalStatus::COMPLETED,
-                'customer_returned' => true,
-                'end_reason' => 'customer_returned',
-            ]);
+        $rental->update([
+            'ended_at' => now(),
+            'actual_end_at' => now(),
+            'ended_by' => $worker->id,
+            'overtime_seconds' => $overtimeSeconds,
+            'status' => RentalStatus::COMPLETED,
+            'customer_returned' => true,
+            'end_reason' => 'customer_returned',
+        ]);
 
-            $boat->update([
-                'status' => BoatStatus::AVAILABLE,
-                'current_rental_id' => null,
-            ]);
+        $boat->update([
+            'status' => BoatStatus::AVAILABLE,
+            'current_rental_id' => null,
+        ]);
 
-            // $this->activityLogService->log('boat_confirmed', $worker, $boat, $rental, "...");
-            // $this->notificationService->send($worker, 'return_confirmed', "...");
+        // $this->activityLogService->log('boat_confirmed', $worker, $boat, $rental, "...");
+        // $this->notificationService->send($worker, 'return_confirmed', "...");
 
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     public function markStillOut(Rental $rental, User $worker): Rental
     {
-        return DB::transaction(function () use ($rental, $worker) {
-            $boat = $rental->boat;
+        $boat = $rental->boat;
 
-            $overtimeSeconds = $this->timerService->getOvertimeSeconds(
-                $rental->started_at, $rental->effective_end_at
-            );
+        $overtimeSeconds = $this->timerService->getOvertimeSeconds(
+            $rental->started_at, $rental->effective_end_at
+        );
 
-            $rental->update([
-                'overtime_seconds' => $overtimeSeconds,
-                'status' => RentalStatus::OVERDUE,
-                'customer_returned' => false,
-            ]);
+        $rental->update([
+            'overtime_seconds' => $overtimeSeconds,
+            'status' => RentalStatus::OVERDUE,
+            'customer_returned' => false,
+        ]);
 
-            $boat->update([
-                'status' => BoatStatus::OVERDUE,
-            ]);
+        $boat->update([
+            'status' => BoatStatus::OVERDUE,
+        ]);
 
-            // $this->activityLogService->log('boat_overdue', $worker, $boat, $rental, "...");
-            // $this->notificationService->send($worker, 'overdue', "...");
+        // $this->activityLogService->log('boat_overdue', $worker, $boat, $rental, "...");
+        // $this->notificationService->send($worker, 'overdue', "...");
 
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     public function forceEnd(Rental $rental, User $admin, ?string $notes = null): Rental
     {
-        return DB::transaction(function () use ($rental, $admin, $notes) {
-            $boat = $rental->boat;
+        $boat = $rental->boat;
 
-            $overtimeSeconds = $this->timerService->getOvertimeSeconds(
-                $rental->started_at, $rental->effective_end_at
-            );
+        $overtimeSeconds = $this->timerService->getOvertimeSeconds(
+            $rental->started_at, $rental->effective_end_at
+        );
 
-            $rental->update([
-                'ended_at' => now(),
-                'actual_end_at' => now(),
-                'ended_by' => $admin->id,
-                'overtime_seconds' => $overtimeSeconds,
-                'status' => RentalStatus::OVERRIDDEN,
-                'notes' => $notes,
-                'admin_override' => true,
-                'end_reason' => 'admin_force_end',
-            ]);
+        $rental->update([
+            'ended_at' => now(),
+            'actual_end_at' => now(),
+            'ended_by' => $admin->id,
+            'overtime_seconds' => $overtimeSeconds,
+            'status' => RentalStatus::OVERRIDDEN,
+            'notes' => $notes,
+            'admin_override' => true,
+            'end_reason' => 'admin_force_end',
+        ]);
 
-            $boat->update([
-                'status' => BoatStatus::AVAILABLE,
-                'current_rental_id' => null,
-            ]);
+        $boat->update([
+            'status' => BoatStatus::AVAILABLE,
+            'current_rental_id' => null,
+        ]);
 
-            // $this->activityLogService->log('rental_overridden', $admin, $boat, $rental, "...");
-            // $this->notificationService->send($rental->worker, 'rental_ended', "...");
-            // $this->notificationService->sendToAllAdmins('rental_overridden', "...");
+        // $this->activityLogService->log('rental_overridden', $admin, $boat, $rental, "...");
+        // $this->notificationService->send($rental->worker, 'rental_ended', "...");
+        // $this->notificationService->sendToAllAdmins('rental_overridden', "...");
 
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     /**
@@ -302,58 +287,56 @@ class RentalService
      */
     public function adjustTime(Rental $rental, User $admin, int $deltaSeconds): Rental
     {
-        return DB::transaction(function () use ($rental, $admin, $deltaSeconds) {
-            $boat = $rental->boat;
-            $now = now();
+        $boat = $rental->boat;
+        $now = now();
 
-            // ── 1. Authoritative remaining time ──────────────────────
-            $endTime = $rental->extended_until ?? $rental->expected_end_at;
-            $remainingSeconds = $endTime ? max(0, $now->diffInSeconds($endTime, false)) : 0;
+        // ── 1. Authoritative remaining time ──────────────────────
+        $endTime = $rental->extended_until ?? $rental->expected_end_at;
+        $remainingSeconds = $endTime ? max(0, $now->diffInSeconds($endTime, false)) : 0;
 
-            $isReduction = $deltaSeconds < 0;
-            $adjustmentMinutes = (int) ceil(abs($deltaSeconds) / 60);
+        $isReduction = $deltaSeconds < 0;
+        $adjustmentMinutes = (int) ceil(abs($deltaSeconds) / 60);
 
-            // ── 2. Compute new remaining ─────────────────────────────
-            $newRemaining = max(0, $remainingSeconds + $deltaSeconds);
+        // ── 2. Compute new remaining ─────────────────────────────
+        $newRemaining = max(0, $remainingSeconds + $deltaSeconds);
 
-            // ── 3. If reduction fully consumes remaining → COMPLETE ──
-            if ($isReduction && $newRemaining === 0) {
-                return $this->completeRentalFromReduction(
-                    $rental, $boat, $admin, $adjustmentMinutes, $remainingSeconds
-                );
+        // ── 3. If reduction fully consumes remaining → COMPLETE ──
+        if ($isReduction && $newRemaining === 0) {
+            return $this->completeRentalFromReduction(
+                $rental, $boat, $admin, $adjustmentMinutes, $remainingSeconds
+            );
+        }
+
+        // ── 4. Otherwise: calculate new end time and save ────────
+        $newEndTime = $now->copy()->addSeconds($newRemaining);
+
+        if ($isReduction) {
+            $rental->update([
+                'reduced_minutes' => ($rental->reduced_minutes ?? 0) + $adjustmentMinutes,
+                'extended_until' => $newEndTime,
+            ]);
+
+            // $this->activityLogService->log('time_reduced', $admin, $boat, $rental, "...");
+            // $this->notificationService->send($rental->worker, 'time_reduced', "...");
+        } else {
+            $data = [
+                'extended_minutes' => ($rental->extended_minutes ?? 0) + $adjustmentMinutes,
+                'extended_until' => $newEndTime,
+            ];
+
+            // If boat was in TIME_UP, OVERDUE or WARNING, reset both boat and rental status
+            if (in_array($boat->status, [BoatStatus::TIME_UP, BoatStatus::OVERDUE, BoatStatus::WARNING])) {
+                $data['status'] = RentalStatus::ACTIVE;
+                $boat->update(['status' => BoatStatus::OCCUPIED]);
             }
 
-            // ── 4. Otherwise: calculate new end time and save ────────
-            $newEndTime = $now->copy()->addSeconds($newRemaining);
+            $rental->update($data);
 
-            if ($isReduction) {
-                $rental->update([
-                    'reduced_minutes' => ($rental->reduced_minutes ?? 0) + $adjustmentMinutes,
-                    'extended_until' => $newEndTime,
-                ]);
+            // $this->activityLogService->log('time_extended', $admin, $boat, $rental, "...");
+            // $this->notificationService->send($rental->worker, 'time_extended', "...");
+        }
 
-                // $this->activityLogService->log('time_reduced', $admin, $boat, $rental, "...");
-                // $this->notificationService->send($rental->worker, 'time_reduced', "...");
-            } else {
-                $data = [
-                    'extended_minutes' => ($rental->extended_minutes ?? 0) + $adjustmentMinutes,
-                    'extended_until' => $newEndTime,
-                ];
-
-                // If boat was in TIME_UP, OVERDUE or WARNING, reset both boat and rental status
-                if (in_array($boat->status, [BoatStatus::TIME_UP, BoatStatus::OVERDUE, BoatStatus::WARNING])) {
-                    $data['status'] = RentalStatus::ACTIVE;
-                    $boat->update(['status' => BoatStatus::OCCUPIED]);
-                }
-
-                $rental->update($data);
-
-                // $this->activityLogService->log('time_extended', $admin, $boat, $rental, "...");
-                // $this->notificationService->send($rental->worker, 'time_extended', "...");
-            }
-
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     /**
@@ -449,28 +432,26 @@ class RentalService
      */
     public function adminCompleteRental(Rental $rental, User $admin): Rental
     {
-        return DB::transaction(function () use ($rental, $admin) {
-            $boat = $rental->boat;
+        $boat = $rental->boat;
 
-            $rental->update([
-                'ended_at' => now(),
-                'actual_end_at' => now(),
-                'ended_by' => $admin->id,
-                'status' => RentalStatus::COMPLETED,
-                'admin_override' => true,
-                'customer_returned' => true,
-                'end_reason' => 'admin_completed',
-            ]);
+        $rental->update([
+            'ended_at' => now(),
+            'actual_end_at' => now(),
+            'ended_by' => $admin->id,
+            'status' => RentalStatus::COMPLETED,
+            'admin_override' => true,
+            'customer_returned' => true,
+            'end_reason' => 'admin_completed',
+        ]);
 
-            $boat->update([
-                'status' => BoatStatus::AVAILABLE,
-                'current_rental_id' => null,
-            ]);
+        $boat->update([
+            'status' => BoatStatus::AVAILABLE,
+            'current_rental_id' => null,
+        ]);
 
-            // $this->activityLogService->log('rental_completed', $admin, $boat, $rental, "...");
+        // $this->activityLogService->log('rental_completed', $admin, $boat, $rental, "...");
 
-            return $rental->fresh();
-        });
+        return $rental->fresh();
     }
 
     /**
