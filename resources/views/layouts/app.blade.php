@@ -789,7 +789,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             initTheme();
-            initNotifications();
+            // Notifications are initialized by notifications.js (loaded via Vite bundle).
             // RealtimeSync.init() is called by dashboard.js (loaded in bundle).
             // dashboard.js's onDashboardData() handles boat cards, stats, clock, etc.
             // It is safe on all pages — all DOM lookups have null guards.
