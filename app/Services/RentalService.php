@@ -26,8 +26,7 @@ class RentalService
     {
         $durationMinutes = $durationMinutes ?? config('brms.rental_duration_minutes', 45);
 
-        // Validate availability BEFORE entering the transaction
-        // (boat was freshly loaded by the controller)
+        // Validate availability
         if ($boat->status !== BoatStatus::AVAILABLE) {
             throw new BoatNotAvailableException(
                 'This boat has already been assigned.'
@@ -36,47 +35,43 @@ class RentalService
 
         $expectedEnd = $this->timerService->calculateExpectedEnd(now(), $durationMinutes);
 
-        return DB::transaction(function () use ($boat, $worker, $expectedEnd) {
-            // Step 1: Create rental
-            try {
-                $rental = Rental::create([
-                    'boat_id' => $boat->id,
-                    'worker_id' => $worker->id,
-                    'started_at' => now(),
-                    'expected_end_at' => $expectedEnd,
-                    'status' => RentalStatus::ACTIVE,
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Rental CREATE failed: ' . $e->getMessage(), [
-                    'boat_id' => $boat->id,
-                    'worker_id' => $worker->id,
-                    'trace' => $e->getTraceAsString(),
-                ]);
-                throw $e;
-            }
+        // Step 1: Create rental (no explicit transaction — PgBouncer pooler
+        // struggles with multi-statement transactions. Each query auto-commits.)
+        Log::info('Attempting Rental::create', [
+            'boat_id' => $boat->id,
+            'worker_id' => $worker->id,
+            'expected_end_at' => $expectedEnd->toDateTimeString(),
+        ]);
 
-            // Step 2: Update boat
-            try {
-                $boat->update([
-                    'status' => BoatStatus::OCCUPIED,
-                    'current_rental_id' => $rental->id,
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Boat UPDATE failed: ' . $e->getMessage(), [
-                    'boat_id' => $boat->id,
-                    'rental_id' => $rental->id,
-                    'trace' => $e->getTraceAsString(),
-                ]);
-                throw $e;
-            }
+        $rental = Rental::create([
+            'boat_id' => $boat->id,
+            'worker_id' => $worker->id,
+            'started_at' => now(),
+            'expected_end_at' => $expectedEnd,
+            'status' => RentalStatus::ACTIVE,
+        ]);
 
-            // $this->activityLogService->log('boat_started', $worker, $boat, $rental,
-            //     "Rental started on boat {$boat->boat_number} by {$worker->name}");
-            // $this->notificationService->send($worker, 'rental_started', "...");
-            // $this->notificationService->sendToAllAdmins('rental_started', "...");
+        Log::info('Rental created OK, id=' . $rental->id);
 
-            return $rental;
-        });
+        // Step 2: Update boat
+        Log::info('Attempting Boat::update', [
+            'boat_id' => $boat->id,
+            'rental_id' => $rental->id,
+        ]);
+
+        $boat->update([
+            'status' => BoatStatus::OCCUPIED,
+            'current_rental_id' => $rental->id,
+        ]);
+
+        Log::info('Boat updated OK');
+
+        // $this->activityLogService->log('boat_started', $worker, $boat, $rental,
+        //     "Rental started on boat {$boat->boat_number} by {$worker->name}");
+        // $this->notificationService->send($worker, 'rental_started', "...");
+        // $this->notificationService->sendToAllAdmins('rental_started', "...");
+
+        return $rental;
     }
 
     public function endRental(Rental $rental, User $endedBy, ?string $notes = null): Rental
