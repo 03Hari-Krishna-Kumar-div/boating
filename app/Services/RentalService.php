@@ -25,17 +25,17 @@ class RentalService
     {
         $durationMinutes = $durationMinutes ?? config('brms.rental_duration_minutes', 45);
 
-        return DB::transaction(function () use ($boat, $worker, $durationMinutes) {
-            $boat = Boat::where('id', $boat->id)->first();
+        // Validate availability BEFORE entering the transaction
+        // (boat was freshly loaded by the controller)
+        if ($boat->status !== BoatStatus::AVAILABLE) {
+            throw new BoatNotAvailableException(
+                'This boat has already been assigned.'
+            );
+        }
 
-            if (!$boat || $boat->status !== BoatStatus::AVAILABLE) {
-                throw new BoatNotAvailableException(
-                    'This boat has already been assigned.'
-                );
-            }
+        $expectedEnd = $this->timerService->calculateExpectedEnd(now(), $durationMinutes);
 
-            $expectedEnd = $this->timerService->calculateExpectedEnd(now(), $durationMinutes);
-
+        return DB::transaction(function () use ($boat, $worker, $expectedEnd) {
             $rental = Rental::create([
                 'boat_id' => $boat->id,
                 'worker_id' => $worker->id,
