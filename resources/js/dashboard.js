@@ -301,12 +301,12 @@ function updateBoatCard(cardElement, boat) {
         if (showTimeControls && rental) {
             const presetBtns = timeControls.querySelectorAll('[onclick^="extendRental"], [onclick^="reduceRental"]');
             presetBtns.forEach(btn => {
-                const match = btn.getAttribute('onclick')?.match(/^(extendRental|reduceRental)\(\d+,\s*(\d+)/);
+                const match = btn.getAttribute('onclick')?.match(/^(extendRental|reduceRental)\((?:null|\d+),\s*(\d+)/);
                 if (match) {
-                    btn.setAttribute('onclick', `${match[1]}(${rental.id}, ${match[2]}`);
+                    btn.setAttribute('onclick', `${match[1]}(${rental.id}, ${match[2]})`);
                 }
             });
-            // Also update the modal openers
+            // Also update the modal openers and End/Force End/Transfer buttons
             const extendModalBtn = timeControls.querySelector('[onclick^="openExtendModal"]');
             if (extendModalBtn) {
                 extendModalBtn.setAttribute('onclick', `openExtendModal(${rental.id}, ${boat.boat_number})`);
@@ -322,10 +322,16 @@ function updateBoatCard(cardElement, boat) {
     const endBtn = cardElement.querySelector('[data-boat-action="end-rental"]');
     if (endBtn) {
         endBtn.style.display = ['occupied', 'warning', 'time_up', 'overdue'].includes(boat.status) ? '' : 'none';
+        if (rental) {
+            endBtn.setAttribute('onclick', `endRental(${rental.id})`);
+        }
     }
     const receiveBtn = cardElement.querySelector('[data-boat-action="mark-received"]');
     if (receiveBtn) {
         receiveBtn.style.display = boat.status === 'ended' ? '' : 'none';
+        if (rental) {
+            receiveBtn.setAttribute('onclick', `markReceived(${rental.id})`);
+        }
     }
     // Force End button — visible only for admin AND when there's a current rental
     const forceEndBtn = cardElement.querySelector('.admin-force-end-btn');
