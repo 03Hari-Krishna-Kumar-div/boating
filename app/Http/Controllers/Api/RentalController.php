@@ -40,7 +40,7 @@ class RentalController extends Controller
             Log::error('Rental start error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to start rental. Please try again.',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
