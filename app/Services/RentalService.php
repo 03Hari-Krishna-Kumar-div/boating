@@ -11,6 +11,7 @@ use App\Exceptions\BoatNotAvailableException;
 use App\Services\ActivityLogService;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RentalService
 {
@@ -36,18 +37,38 @@ class RentalService
         $expectedEnd = $this->timerService->calculateExpectedEnd(now(), $durationMinutes);
 
         return DB::transaction(function () use ($boat, $worker, $expectedEnd) {
-            $rental = Rental::create([
-                'boat_id' => $boat->id,
-                'worker_id' => $worker->id,
-                'started_at' => now(),
-                'expected_end_at' => $expectedEnd,
-                'status' => RentalStatus::ACTIVE,
-            ]);
+            // Step 1: Create rental
+            try {
+                $rental = Rental::create([
+                    'boat_id' => $boat->id,
+                    'worker_id' => $worker->id,
+                    'started_at' => now(),
+                    'expected_end_at' => $expectedEnd,
+                    'status' => RentalStatus::ACTIVE,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Rental CREATE failed: ' . $e->getMessage(), [
+                    'boat_id' => $boat->id,
+                    'worker_id' => $worker->id,
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                throw $e;
+            }
 
-            $boat->update([
-                'status' => BoatStatus::OCCUPIED,
-                'current_rental_id' => $rental->id,
-            ]);
+            // Step 2: Update boat
+            try {
+                $boat->update([
+                    'status' => BoatStatus::OCCUPIED,
+                    'current_rental_id' => $rental->id,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Boat UPDATE failed: ' . $e->getMessage(), [
+                    'boat_id' => $boat->id,
+                    'rental_id' => $rental->id,
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                throw $e;
+            }
 
             // $this->activityLogService->log('boat_started', $worker, $boat, $rental,
             //     "Rental started on boat {$boat->boat_number} by {$worker->name}");
