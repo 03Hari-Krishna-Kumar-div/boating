@@ -13,6 +13,7 @@ use App\Policies\RentalPolicy;
 use App\Policies\WorkerPolicy;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -33,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Force HTTPS for all generated URLs when behind proxy (Render)
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         // Register observers
         Boat::observe(BoatObserver::class);
         Rental::observe(RentalObserver::class);
